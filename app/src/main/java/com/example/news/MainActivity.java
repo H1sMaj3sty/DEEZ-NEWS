@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import com.example.news.Models.Articles;
 import com.example.news.Models.Headlines;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     final String API_KEY = BuildConfig.API_KEY;
     Adapter adapter;
     List<Articles> articles = new ArrayList<>();
+    BottomNavigationView bottomNavigationView;
+    boolean isId = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +50,10 @@ public class MainActivity extends AppCompatActivity {
         btnSearch = findViewById(R.id.button);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
         recyclerView = findViewById(R.id.recyclerView);
+        bottomNavigationView = findViewById(R.id.bottom_nav_view);
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
         String country = getCountry();
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -68,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     retreiveJson(v.getText().toString(), country, API_KEY);
-                    Toast.makeText(MainActivity.this, "Called", Toast.LENGTH_SHORT).show();
                 }
                 return false;
             }
@@ -97,6 +103,37 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        bottomNavigationView.setSelectedItemId(R.id.bottom_home);
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.bottom_home) {
+                return true;
+            } else if (item.getItemId() == R.id.bottom_country) {
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_right);
+                if (isId == true) {
+                    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                        @Override
+                        public void onRefresh() {
+                            retreiveJson("","id", API_KEY);
+                        }
+                    });
+                    retreiveJson("", "id", API_KEY);
+                    isId = false;
+                } else {
+                    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                        @Override
+                        public void onRefresh() {
+                            retreiveJson("",country, API_KEY);
+                        }
+                    });
+                    retreiveJson("", country, API_KEY);
+                    isId = true;
+                }
+            } else if (item.getItemId() == R.id.profile) {
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_right);
+                startActivity(new Intent(getApplicationContext(), Profile.class));
+            }
+            return false;
+        });
     }
 
     public void retreiveJson(String query,String country, String apiKey) {
