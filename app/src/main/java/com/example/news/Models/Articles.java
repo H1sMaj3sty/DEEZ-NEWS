@@ -87,4 +87,5 @@ public class Articles {
     public void setPublishedAt(String publishedAt) {
         this.publishedAt = publishedAt;
     }
+
 }

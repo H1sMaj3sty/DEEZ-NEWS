@@ -31,7 +31,7 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    RecyclerView recyclerView;
+    RecyclerView recyclerView, recyclerViewCategories;
     SwipeRefreshLayout swipeRefreshLayout;
     EditText etQuery;
     Button btnSearch;
@@ -40,29 +40,35 @@ public class MainActivity extends AppCompatActivity {
     List<Articles> articles = new ArrayList<>();
     BottomNavigationView bottomNavigationView;
     boolean isId = true;
+    String country = getCountry();
+    String[] categories = {"all", "business", "entertainment", "general", "health", "science", "sports", "tech"};
+    String selectedCategory = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         etQuery = findViewById(R.id.editText);
         btnSearch = findViewById(R.id.button);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
         recyclerView = findViewById(R.id.recyclerView);
+        recyclerViewCategories = findViewById(R.id.recyclerViewHorizontal);
         bottomNavigationView = findViewById(R.id.bottom_nav_view);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        String country = getCountry();
+        recyclerViewCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        recyclerViewCategories.setAdapter(new AdapterCategory(this, categories));
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                retreiveJson("",country, API_KEY);
+                retreiveJson("",country, selectedCategory,  API_KEY);
             }
         });
-        retreiveJson("", country, API_KEY);
+        retreiveJson("", country, selectedCategory,  API_KEY);
 
         etQuery.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -71,10 +77,10 @@ public class MainActivity extends AppCompatActivity {
                     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                         @Override
                         public void onRefresh() {
-                            retreiveJson(v.getText().toString(),country, API_KEY);
+                            retreiveJson(v.getText().toString(),country, selectedCategory,  API_KEY);
                         }
                     });
-                    retreiveJson(v.getText().toString(), country, API_KEY);
+                    retreiveJson(v.getText().toString(), country, selectedCategory,  API_KEY);
                 }
                 return false;
             }
@@ -87,18 +93,18 @@ public class MainActivity extends AppCompatActivity {
                     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                         @Override
                         public void onRefresh() {
-                            retreiveJson(etQuery.getText().toString(),country, API_KEY);
+                            retreiveJson(etQuery.getText().toString(), country, selectedCategory,  API_KEY);
                         }
                     });
-                    retreiveJson(etQuery.getText().toString(), country, API_KEY);
+                    retreiveJson(etQuery.getText().toString(), country, selectedCategory,  API_KEY);
                 } else {
                     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                         @Override
                         public void onRefresh() {
-                            retreiveJson("",country, API_KEY);
+                            retreiveJson("",country, selectedCategory,  API_KEY);
                         }
                     });
-                    retreiveJson("", country, API_KEY);
+                    retreiveJson("", country, selectedCategory,  API_KEY);
                 }
             }
         });
@@ -110,22 +116,24 @@ public class MainActivity extends AppCompatActivity {
             } else if (item.getItemId() == R.id.bottom_country) {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_right);
                 if (isId == true) {
+                    country = "id";
                     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                         @Override
                         public void onRefresh() {
-                            retreiveJson("","id", API_KEY);
+                            retreiveJson("",country, selectedCategory,  API_KEY);
                         }
                     });
-                    retreiveJson("", "id", API_KEY);
+                    retreiveJson("", country, selectedCategory,  API_KEY);
                     isId = false;
                 } else {
+                    country = getCountry();
                     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                         @Override
                         public void onRefresh() {
-                            retreiveJson("",country, API_KEY);
+                            retreiveJson("",country, selectedCategory,  API_KEY);
                         }
                     });
-                    retreiveJson("", country, API_KEY);
+                    retreiveJson("", country, selectedCategory,  API_KEY);
                     isId = true;
                 }
             } else if (item.getItemId() == R.id.profile) {
@@ -136,14 +144,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void retreiveJson(String query,String country, String apiKey) {
+    public void retreiveJson(String query,String country, String category, String apiKey) {
 
         swipeRefreshLayout.setRefreshing(true);
         Call<Headlines> call;
-        if (!etQuery.getText().toString().equals("")) {
+        if (query != "") {
             call = ApiClient.getInstance().getApi().getSpecificData(query, apiKey);
         } else {
-            call = ApiClient.getInstance().getApi().getHeadLines(country, apiKey);
+            call = ApiClient.getInstance().getApi().getHeadLines(country, category, apiKey);
         }
         call.enqueue(new Callback<Headlines>() {
             @Override
@@ -171,4 +179,20 @@ public class MainActivity extends AppCompatActivity {
         return country.toLowerCase();
     }
 
+    public void onCategoryClicked(String category) {
+        selectedCategory = category;
+        if (selectedCategory == "all") {
+            selectedCategory = "";
+        } else if (selectedCategory == "tech") {
+            selectedCategory = "technology";
+        }
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                retreiveJson("",country, selectedCategory, API_KEY);
+            }
+        });
+        retreiveJson("", country, selectedCategory, API_KEY);
+
+    }
 }
