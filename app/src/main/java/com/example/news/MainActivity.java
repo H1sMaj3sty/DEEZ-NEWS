@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     List<Articles> articles = new ArrayList<>();
     BottomNavigationView bottomNavigationView;
     boolean isId = true;
-    String country = getCountry();
+    String country;
     String[] categories = {"all", "business", "entertainment", "general", "health", "science", "sports", "tech"};
     String selectedCategory = "";
 
@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerViewCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         recyclerViewCategories.setAdapter(new AdapterCategory(this, categories));
+
+        country = getCountry();
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -115,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             } else if (item.getItemId() == R.id.bottom_country) {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_right);
-                if (isId == true) {
+                if (country != "id") {
                     country = "id";
                     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                         @Override
@@ -124,9 +126,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     retreiveJson("", country, selectedCategory,  API_KEY);
-                    isId = false;
                 } else {
-                    country = getCountry();
+                    country = "us";
                     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                         @Override
                         public void onRefresh() {
@@ -134,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     retreiveJson("", country, selectedCategory,  API_KEY);
-                    isId = true;
                 }
             } else if (item.getItemId() == R.id.profile) {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_right);
